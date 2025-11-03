@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="id" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResepKu - Resep Internasional</title>
+    
+    <!-- Impor Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Impor Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Impor Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Variabel Tema Warna (Fitur 15) */
+        :root {
+            --color-primary: 37 99 235; /* Blue-600 */
+        }
+        .text-primary { color: rgb(var(--color-primary)); }
+        .bg-primary { background-color: rgb(var(--color-primary)); }
+        .border-primary { border-color: rgb(var(--color-primary)); }
+        .ring-primary { --tw-ring-color: rgb(var(--color-primary)); }
+
+        html {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .hidden { display: none !important; }
+
+        /* 4. Animasi Splash Screen Baru */
+        @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes slideUp { 0% { transform: translateY(20px); } 100% { transform: translateY(0); } }
+        .splash-logo {
+            animation: fadeIn 1s ease-out, slideUp 1s ease-out;
+        }
+        .splash-text {
+            animation: fadeIn 1.5s ease-out, slideUp 1.5s ease-out;
+        }
+
+        /* 17. Animasi Transisi Halaman */
+        .page {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Kustomisasi scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::-webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* CSS untuk Print */
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none; }
+        }
+        
+        /* 18. Tombol Kembali ke Atas */
+        #scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(100px);
+            z-index: 20;
+        }
+        #scroll-to-top.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 6. Penilaian (Rating) Bintang */
+        .rating-stars .fa-star {
+            color: #d1d5db; /* gray-300 */
+            cursor: pointer;
+        }
+        .rating-stars .fa-star.selected,
+        .rating-stars .fa-star:hover,
+        .rating-stars .fa-star:hover ~ .fa-star {
+            color: #f59e0b; /* yellow-500 */
+        }
+        .rating-stars:hover .fa-star {
+            color: #f59e0b;
+        }
+
+        /* 5. Mode Step-by-Step */
+        #step-by-step-modal .step-content {
+            min-height: 100px;
+        }
+        
+        /* 13. Mode Baca (Distraction-Free) */
+        body.distraction-free header,
+        body.distraction-free #detail-actions {
+            display: none;
+        }
+        
+        /* 19. Tampilan Kompak */
+        #recipe-grid.compact .recipe-card {
+            flex-direction: row;
+            align-items: center;
+        }
+        #recipe-grid.compact .recipe-card img {
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
+        }
+        #recipe-grid.compact .recipe-card .p-4 {
+            flex-grow: 1;
+        }
+        #recipe-grid.compact .recipe-card .recipe-desc,
+        #recipe-grid.compact .recipe-card .recipe-meta {
+            display: none;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased relative min-h-screen">
+
+    <!-- 1. Splash Screen (Animasi Logo + Nama) -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
+        <div class="splash-logo">
+            <i class="fas fa-utensils text-6xl text-primary"></i>
+        </div>
+        <h1 class="text-3xl font-bold mt-4 text-primary splash-text">ResepKita</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 splash-text">Menjelajahi Cita Rasa Dunia</p>
+    </div>
+
+    <!-- Container Aplikasi Utama -->
+    <div id="app-container" class="opacity-0 transition-opacity duration-500">
+
+        <!-- Header / Navbar Tetap -->
+        <header class="sticky top-0 z-30 w-full bg-white dark:bg-gray-800 shadow-md no-print">
+            <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-2 cursor-pointer" id="home-btn">
+                    <i class="fas fa-utensils text-2xl text-primary"></i>
+                    <span class="text-xl font-bold text-gray-800 dark:text-white">ResepKita</span>
+                </div>
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button id="shopping-list-btn" class_="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Daftar Belanja">
+                        <i class="fas fa-shopping-cart text-gray-600 dark:text-gray-300"></i>
+                    </button>
+                    <button id="favorites-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Favorit">
+                        <i class="fas fa-heart text-red-500"></i>
+                    </button>
+                    <button id="theme-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Ganti Tema">
+                        <i class="fas fa-palette text-gray-600 dark:text-gray-300"></i>
+                    </button>
+                    <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Mode Gelap">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="fullscreen-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Layar Penuh">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Konten Utama (Page Container) -->
+        <main class="container mx-auto p-4 md:p-6">
+
+            <!-- 2. Halaman Pemilihan Kategori -->
+            <section id="page-selection" class="page">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Pilih Kategori Resep</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+                    <!-- Card Makanan -->
+                    <div id="select-food" class="category-card cursor-pointer bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-105">
+                        <div class="h-48 md:h-64 bg-cover bg-center" style="background-image: url('LogoS/Makanan.png')"></div>
+                        <div class="p-6 text-center">
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Resep Makanan</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Temukan hidangan utama, pembuka, dan penutup dari seluruh dunia.</p>
+                        </div>
+                    </div>
+                    <!-- Card Minuman -->
+                    <div id="select-drink" class="category-card cursor-pointer bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-105">
+                        <div class="h-48 md:h-64 bg-cover bg-center" style="background-image: url('LogoS/Minuman.png')"></div>
+                        <div class="p-6 text-center">
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Resep Minuman</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Jelajahi minuman segar, hangat, dan unik dari berbagai negara.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 20. Resep Hari Ini -->
+                <div class="mt-10 max-w-4xl mx-auto">
+                    <h3 class="text-xl font-bold mb-4 text-center">Resep Hari Ini</h3>
+                    <div id="recipe-of-the-day-card" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row cursor-pointer transition-transform transform hover:scale-[1.02]">
+                        <!-- Konten di-generate JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Halaman Daftar Resep (Makanan/Minuman) -->
+            <section id="page-list" class="page hidden">
+                <button class="back-btn mb-4 text-primary hover:underline">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Kategori
+                </button>
+                <h2 id="list-title" class="text-3xl font-bold mb-6">Daftar Resep</h2>
+                
+                <!-- Fitur Pencarian dan Filter -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="relative md:col-span-2 lg:col-span-1">
+                        <input type="text" id="search-input" placeholder="Cari resep..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 ring-primary">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <select id="filter-origin" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 ring-primary">
+                        <option value="all">Semua Asal Negara</option>
+                    </select>
+                    <!-- 7. Filter Waktu Masak -->
+                    <select id="filter-time" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 ring-primary">
+                        <option value="all">Semua Waktu</option>
+                        <option value="30">Kurang dari 30 mnt</option>
+                        <option value="60">Kurang dari 1 jam</option>
+                        <option value="120">Lebih dari 1 jam</option>
+                    </select>
+                    <!-- 8. Filter Kesulitan -->
+                    <select id="filter-difficulty" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 ring-primary">
+                        <option value="all">Semua Kesulitan</option>
+                        <option value="Mudah">Mudah</option>
+                        <option value="Sedang">Sedang</option>
+                        <option value="Sulit">Sulit</option>
+                    </select>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <button id="random-recipe-btn" class="bg-primary hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded-lg flex items-center">
+                        <i class="fas fa-random mr-2"></i> Resep Acak
+                    </button>
+                    <!-- 19. Tombol Tampilan Kompak -->
+                    <button id="compact-toggle-btn" class="text-primary p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <i class="fas fa-bars mr-1"></i> Tampilan Kompak
+                    </button>
+                </div>
+
+                <!-- Grid Resep -->
+                <div id="recipe-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Kartu resep akan di-generate oleh JS -->
+                </div>
+                <p id="no-recipes-found" class="text-center text-gray-600 dark:text-gray-400 hidden col-span-full">Tidak ada resep yang ditemukan.</p>
+            </section>
+
+            <!-- 4. Halaman Detail Resep -->
+            <section id="page-detail" class="page hidden">
+                <button class="back-btn mb-4 text-primary hover:underline no-print">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar
+                </button>
+                
+                <div id="print-area">
+                    <div id="detail-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto">
+                        <!-- Konten detail akan di-generate oleh JS -->
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi Detail (di luar area print) -->
+                <div id="detail-actions" class="max-w-4xl mx-auto mt-6 flex flex-wrap gap-3 no-print">
+                    <button id="detail-favorite-btn" class="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-heart mr-2"></i> <span>Tambah ke Favorit</span>
+                    </button>
+                    <button id="print-btn" class="flex-1 md:flex-none bg-primary hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-print mr-2"></i> Cetak Resep
+                    </button>
+                    <button id="share-btn" class="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-share-alt mr-2"></i> Bagikan
+                    </button>
+                    <button id="timer-btn" class="flex-1 md:flex-none bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock mr-2"></i> Timer
+                    </button>
+                </div>
+            </section>
+            
+            <!-- 5. Halaman Favorit -->
+            <section id="page-favorites" class="page hidden">
+                <button class="back-btn mb-4 text-primary hover:underline">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Kategori
+                </button>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold">Resep Favorit Saya</h2>
+                    <button id="clear-favorites-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">
+                        <i class="fas fa-trash mr-1"></i> Kosongkan
+                    </button>
+                </div>
+                <div id="favorites-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Kartu resep favorit akan di-generate oleh JS -->
+                </div>
+                <p id="no-favorites" class="text-center text-gray-600 dark:text-gray-400 hidden">Anda belum memiliki resep favorit.</p>
+            </section>
+
+        </main>
+        
+        <!-- 18. Tombol Scroll ke Atas -->
+        <button id="scroll-to-top" class="bg-primary hover:bg-opacity-80 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg no-print">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-40 bg-black bg-opacity-50 items-center justify-center hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-black px-4 py-2 rounded-lg shadow-lg transition-transform translate-x-[200%]">
+        <!-- Pesan toast akan di-generate oleh JS -->
+    </div>
+    
+    <!-- === MODALS === -->
+    
+    <!-- 3. Modal Timer Memasak -->
+    <div id="timer-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-sm w-full p-6 relative">
+            <button id="close-timer-modal" class="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4">Timer Memasak</h3>
+            <div id="timer-display" class="text-6xl font-mono text-center my-6">00:00</div>
+            <div class="flex justify-center space-x-4">
+                <button id="timer-start-stop" class="bg-primary hover:bg-opacity-80 text-white font-bold py-2 px-6 rounded-lg">Mulai</button>
+                <button id="timer-reset" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Reset</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 4. Modal Daftar Belanja -->
+    <div id="shopping-list-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 relative flex flex-col" style="max-height: 80vh;">
+            <button id="close-shopping-list-modal" class="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4">Daftar Belanja</h3>
+            <div id="shopping-list-content" class="flex-grow overflow-y-auto space-y-2 mb-4">
+                <!-- Konten di-generate JS -->
+            </div>
+            <button id="clear-shopping-list" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg w-full">
+                Kosongkan Daftar Belanja
+            </button>
+        </div>
+    </div>
+    
+    <!-- 5. Modal Step-by-Step -->
+    <div id="step-by-step-modal" class="fixed inset-0 z-40 bg-black bg-opacity-70 items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-lg w-full p-6 relative">
+            <button id="close-step-modal" class="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4">Mode Langkah-demi-Langkah</h3>
+            <div id="step-by-step-content" class="text-center">
+                <p class="text-sm text-gray-500" id="step-counter">Langkah 1 dari 5</p>
+                <p class="text-lg my-6 step-content" id="step-text">Memuat...</p>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button id="prev-step-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50">Sebelumnya</button>
+                <button id="next-step-btn" class="bg-primary hover:bg-opacity-80 text-white font-bold py-2 px-6 rounded-lg">Berikutnya</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 15. Modal Tema Warna -->
+    <div id="theme-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-sm w-full p-6 relative">
+            <button id="close-theme-modal" class="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4">Pilih Tema Warna</h3>
+            <div id="theme-options" class="flex justify-center space-x-4">
+                <button class="theme-option w-10 h-10 rounded-full bg-blue-600" data-color="37 99 235"></button>
+                <button class="theme-option w-10 h-10 rounded-full bg-red-600" data-color="220 38 38"></button>
+                <button class="theme-option w-10 h-10 rounded-full bg-green-600" data-color="22 163 74"></button>
+                <button class="theme-option w-10 h-10 rounded-full bg-yellow-500" data-color="234 179 8"></button>
+                <button class="theme-option w-10 h-10 rounded-full bg-purple-600" data-color="147 51 234"></button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 18. Modal Konfirmasi Kustom -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-sm w-full p-6">
+            <h3 id="confirm-title" class="text-xl font-bold mb-4">Konfirmasi</h3>
+            <p id="confirm-message" class="text-gray-600 dark:text-gray-400 mb-6">Anda yakin?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="confirm-cancel" class="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-black dark:text-white font-bold py-2 px-4 rounded-lg">Batal</button>
+                <button id="confirm-ok" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Script Aplikasi -->
+    <script type="module">
+        // --- DATABASE RESEP (LOKAL) ---
+        // 5. Data Lokal
+        // 2. Tambah 10 resep (total 15/15) + 1. Gambar unik + 7/8/10. Data baru
+        const allRecipes = [
+            // Makanan (15)
+            {
+                id: 'food1', type: 'food', name: 'Nasi Goreng', origin: 'Indonesia', cookTime: 20, difficulty: 'Mudah',
+                image: 'item/Nasi Goreng.png',
+                description: 'Nasi goreng khas Indonesia dengan kecap manis, bawang, dan rempah.',
+                ingredients: ['2 piring nasi putih', '2 sdm kecap manis', '1 butir telur', '3 siung bawang merah', '2 siung bawang putih', 'Garam secukupnya'],
+                instructions: ['Haluskan bawang merah dan putih.', 'Tumis bumbu halus hingga wangi.', 'Masukkan telur, orak-arik.', 'Masukkan nasi, kecap manis, dan garam. Aduk rata.', 'Sajikan.'],
+                nutrition: { calories: '450kcal', protein: '15g', carbs: '60g', fat: '15g' }
+            },
+            {
+                id: 'food2', type: 'food', name: 'Spaghetti Carbonara', origin: 'Italia', cookTime: 25, difficulty: 'Sedang',
+                image: 'item/Spagetti Carbonara.png',
+                description: 'Pasta klasik Italia dengan saus telur, keju Pecorino, dan guanciale.',
+                ingredients: ['200g spaghetti', '100g guanciale', '2 butir telur', '50g keju Pecorino', 'Lada hitam', 'Garam'],
+                instructions: ['Rebus spaghetti.', 'Tumis guanciale.', 'Kocok telur, keju, lada.', 'Tiriskan spaghetti, masukkan ke wajan guanciale (api mati).', 'Tuang campuran telur, aduk cepat.', 'Sajikan segera.'],
+                nutrition: { calories: '600kcal', protein: '30g', carbs: '50g', fat: '35g' }
+            },
+            {
+                id: 'food3', type: 'food', name: 'Sushi (Maki Roll)', origin: 'Jepang', cookTime: 45, difficulty: 'Sedang',
+                image: 'item/Sushi_Roll.png',
+                description: 'Nasi cuka digulung nori dengan isian ikan atau sayuran.',
+                ingredients: ['1 cangkir beras sushi', '1.25 cangkir air', '3 sdm cuka beras', '2 sdm gula', '1 sdt garam', '4 lembar nori', 'Isian (timun, salmon)'],
+                instructions: ['Masak nasi.', 'Campur cuka, gula, garam, campur dengan nasi.', 'Ratakan nasi di atas nori.', 'Letakkan isian, gulung.', 'Potong-potong.'],
+                nutrition: { calories: '300kcal', protein: '10g', carbs: '55g', fat: '5g' }
+            },
+            {
+                id: 'food4', type: 'food', name: 'Tacos al Pastor', origin: 'Meksiko', cookTime: 120, difficulty: 'Sulit',
+                image: 'item/Tacos.png',
+                description: 'Taco khas Meksiko berisi daging babi bumbu panggang vertikal.',
+                ingredients: ['500g daging babi', '3 cabai guajillo', '1/2 cangkir jus nanas', '2 sdm cuka', 'Tortilla jagung', 'Nanas, bawang, ketumbar'],
+                instructions: ['Blender bumbu (cabai, nanas, cuka).', 'Marinasikan daging min 4 jam.', 'Panggang daging.', 'Cincang daging.', 'Sajikan di atas tortilla dengan pelengkap.'],
+                nutrition: { calories: '250kcal', protein: '20g', carbs: '20g', fat: '10g' }
+            },
+            {
+                id: 'food5', type: 'food', name: 'Croissant', origin: 'Prancis', cookTime: 180, difficulty: 'Sulit',
+                image: 'item/Croissant.png',
+                description: 'Pastry mentega berlapis-lapis (viennoiserie) khas Prancis.',
+                ingredients: ['500g tepung terigu', '140ml air', '140ml susu', '55g gula', '2 sdt ragi', '280g mentega tawar dingin'],
+                instructions: ['Uleni adonan (kecuali mentega). Diamkan.', 'Pipihkan adonan. Lipat mentega di dalamnya (laminasi).', 'Ulangi proses lipat dan dinginkan.', 'Potong segitiga, gulung.', 'Proofing.', 'Panggang 200°C.'],
+                nutrition: { calories: '400kcal', protein: '5g', carbs: '40g', fat: '25g' }
+            },
+            {
+                id: 'food6', type: 'food', name: 'Tom Yum Goong', origin: 'Thailand', cookTime: 30, difficulty: 'Sedang',
+                image: 'item/Tom.png',
+                description: 'Sup udang asam pedas khas Thailand dengan serai dan daun jeruk.',
+                ingredients: ['500g udang', '1 liter kaldu ayam', '2 batang serai', '5 lembar daun jeruk', '3 sdm air jeruk nipis', '2 sdm saus ikan', 'Jamur merang', 'Cabai rawit'],
+                instructions: ['Didihkan kaldu dengan serai dan daun jeruk.', 'Masukkan udang dan jamur, masak hingga udang matang.', 'Matikan api.', 'Masukkan air jeruk nipis, saus ikan, dan cabai rawit.', 'Sajikan panas.'],
+                nutrition: { calories: '150kcal', protein: '20g', carbs: '10g', fat: '3g' }
+            },
+            {
+                id: 'food7', type: 'food', name: 'Pad Thai', origin: 'Thailand', cookTime: 25, difficulty: 'Sedang',
+                image: 'item/Pad_Thai.png',
+                description: 'Kwetiau goreng khas Thailand dengan saus asam, tauge, dan udang.',
+                ingredients: ['200g kwetiau beras', '150g udang', '2 butir telur', '100g tauge', '2 sdm saus asam', '1 sdm saus ikan', '1 sdt gula aren', 'Kacang tanah cincang'],
+                instructions: ['Rendam kwetiau hingga lunak.', 'Tumis udang hingga matang, sisihkan.', 'Orak-arik telur.', 'Masukkan kwetiau, saus asam, saus ikan, dan gula. Aduk rata.', 'Masukkan udang, tauge, aduk sebentar.', 'Sajikan dengan taburan kacang.'],
+                nutrition: { calories: '550kcal', protein: '25g', carbs: '70g', fat: '18g' }
+            },
+            {
+                id: 'food8', type: 'food', name: 'Ramen', origin: 'Jepang', cookTime: 70, difficulty: 'Sedang',
+                image: 'item/Ramen.png',
+                description: 'Sup mi Jepang dengan kaldu kental (shoyu/miso/tonkotsu) dan aneka topping.',
+                ingredients: ['2 porsi mi ramen segar', '1 liter kaldu ayam/babi', '2 sdm shoyu (kecap asin Jepang)', '1 sdm mirin', 'Topping: Chashu (daging babi), Ajitama (telur rebus), Nori, Daun bawang'],
+                instructions: ['Buat tare (bumbu) dengan shoyu dan mirin.', 'Rebus kaldu hingga mendidih.', 'Tuang tare ke mangkuk, tambahkan kaldu panas.', 'Rebus mi ramen sesuai instruksi.', 'Tiriskan mi, masukkan ke mangkuk kaldu.', 'Susun topping di atasnya.'],
+                nutrition: { calories: '700kcal', protein: '35g', carbs: '80g', fat: '25g' }
+            },
+            {
+                id: 'food9', type: 'food', name: 'Paella', origin: 'Spanyol', cookTime: 60, difficulty: 'Sulit',
+                image: 'item/Paella.png',
+                description: 'Nasi khas Spanyol yang dimasak dengan saffron dan aneka seafood atau daging.',
+                ingredients: ['2 cangkir beras Bomba/Arborio', '1 liter kaldu ayam', 'Sejumput saffron', '200g udang', '200g kerang', '100g chorizo', '1 bawang bombay', 'Paprika'],
+                instructions: ['Tumis bawang bombay, paprika, dan chorizo di wajan paella.', 'Masukkan beras, aduk hingga terlapisi minyak.', 'Tuang kaldu (yang sudah dicampur saffron) perlahan.', 'Jangan diaduk. Masak dengan api kecil.', 'Saat hampir matang, masukkan udang dan kerang.', "Masak hingga cairan terserap dan terbentuk 'socarrat' (kerak) di bawah."],
+                nutrition: { calories: '650kcal', protein: '40g', carbs: '80g', fat: '15g' }
+            },
+            {
+                id: 'food10', type: 'food', name: 'Goulash', origin: 'Hongaria', cookTime: 150, difficulty: 'Sedang',
+                image: 'item/Goulash.png',
+                description: 'Sup daging dan sayuran kental khas Hongaria yang kaya bumbu paprika.',
+                ingredients: ['1kg daging sapi (potong dadu)', '2 sdm bubuk paprika Hongaria', '2 bawang bombay', '2 wortel', '2 kentang', '1 liter kaldu sapi', 'Minyak', 'Garam'],
+                instructions: ['Tumis bawang bombay hingga layu.', 'Masukkan daging, masak hingga kecoklatan.', 'Taburi bubuk paprika, aduk cepat (jangan sampai gosong).', 'Tuang kaldu, didihkan.', 'Kecilkan api, tutup, masak 1.5 jam.', 'Masukkan wortel dan kentang, masak lagi 30 menit hingga empuk.'],
+                nutrition: { calories: '500kcal', protein: '45g', carbs: '30g', fat: '20g' }
+            },
+            {
+                id: 'food11', type: 'food', name: 'Kimchi Jjigae', origin: 'Korea', cookTime: 40, difficulty: 'Mudah',
+                image: 'item/Kimchi.png',
+                description: 'Sup rebusan kimchi pedas khas Korea, seringkali dengan tahu dan perut babi.',
+                ingredients: ['1 cangkir kimchi (asam)', '100g perut babi (pork belly)', '1/2 blok tahu sutra', '1 sdm gochugaru (cabai bubuk)', '1 sdm gochujang (pasta cabai)', '2 cangkir kaldu ikan teri', 'Daun bawang'],
+                instructions: ['Tumis perut babi hingga sedikit matang.', 'Masukkan kimchi, tumis bersama hingga kimchi layu.', 'Tambahkan gochugaru dan gochujang, aduk.', 'Tuang kaldu, didihkan.', 'Masukkan tahu.', 'Masak 15-20 menit.', 'Taburi daun bawang.'],
+                nutrition: { calories: '350kcal', protein: '20g', carbs: '15g', fat: '25g' }
+            },
+            {
+                id: 'food12', type: 'food', name: 'Fish and Chips', origin: 'Inggris', cookTime: 30, difficulty: 'Sedang',
+                image: 'item/Fish_chips.png',
+                description: 'Ikan dori berbalut adonan tepung renyah, disajikan dengan kentang goreng.',
+                ingredients: ['2 filet ikan dori/kod', '1 cangkir tepung terigu', '1 sdt baking powder', '1/2 cangkir bir (atau soda)', 'Garam', '2 kentang besar', 'Minyak untuk menggoreng'],
+                instructions: ['Potong kentang, goreng setengah matang, tiriskan.', 'Campur tepung, baking powder, garam. Adoni dengan bir/soda.', 'Celupkan ikan ke adonan.', 'Goreng ikan di minyak panas hingga keemasan.', 'Goreng kembali kentang hingga renyah.', 'Sajikan dengan saus tartar.'],
+                nutrition: { calories: '800kcal', protein: '30g', carbs: '70g', fat: '45g' }
+            },
+            {
+                id: 'food13', type: 'food', name: 'Moussaka', origin: 'Yunani', cookTime: 100, difficulty: 'Sulit',
+                image: 'item/Moussaka.png',
+                description: 'Hidangan panggang berlapis terong, kentang, daging cincang, dan saus béchamel.',
+                ingredients: ['2 terong besar', '2 kentang', '500g daging domba cincang', '1 bawang bombay', 'Saus tomat', 'Kayu manis bubuk', 'Saus Béchamel (Mentega, Terigu, Susu, Keju)'],
+                instructions: ['Goreng/panggang irisan terong dan kentang.', 'Tumis bawang dan daging cincang. Masukkan saus tomat dan kayu manis. Masak hingga matang.', 'Buat saus béchamel.', 'Susun di loyang: kentang, terong, saus daging. Ulangi.', 'Tutup lapisan atas dengan saus béchamel.', 'Panggang 180°C selama 45 menit.'],
+                nutrition: { calories: '700kcal', protein: '35g', carbs: '40g', fat: '45g' }
+            },
+            {
+                id: 'food14', type: 'food', name: 'Peking Duck', origin: 'Tiongkok', cookTime: 240, difficulty: 'Sulit',
+                image: 'item/Peking_Duck.png',
+                description: 'Bebek panggang khas Beijing dengan kulit renyah yang disajikan dengan pancake tipis.',
+                ingredients: ['1 ekor bebek utuh', 'Maltosa/madu', 'Cuka beras', 'Garam', 'Bumbu 5 rempah', 'Pancake tipis', 'Saus hoisin', 'Daun bawang', 'Timun'],
+                instructions: ['Bersihkan bebek. Pompa udara di bawah kulit (jika bisa).', 'Siram dengan air mendidih.', 'Olesi dengan campuran maltosa dan cuka.', 'Keringkan (gantung) minimal 6 jam.', 'Panggang di suhu tinggi hingga kulit renyah.', 'Potong-potong kulit dan daging.', 'Sajikan dengan pancake, saus, dan pelengkap.'],
+                nutrition: { calories: '500kcal', protein: '30g', carbs: '30g', fat: '30g' }
+            },
+            {
+                id: 'food15', type: 'food', name: 'Feijoada', origin: 'Brasil', cookTime: 180, difficulty: 'Sedang',
+                image: 'item/Feijoada.png',
+                description: 'Rebusan kacang hitam kental khas Brasil dengan berbagai jenis daging babi.',
+                ingredients: ['500g kacang hitam kering (rendam semalaman)', '200g sosis asap', '200g perut babi', '200g daging asap', '1 bawang bombay', '3 siung bawang putih', 'Daun salam', 'Nasi', 'Jeruk'],
+                instructions: ['Rebus kacang hitam hingga setengah empuk.', 'Di wajan lain, tumis bawang putih dan bawang bombay.', 'Masukkan semua daging, masak hingga matang.', 'Campur tumisan daging ke panci kacang.', 'Tambahkan daun salam.', 'Masak dengan api kecil 1-2 jam hingga kental.', 'Sajikan dengan nasi dan irisan jeruk.'],
+                nutrition: { calories: '850kcal', protein: '50g', carbs: '70g', fat: '40g' }
+            },
+
+            // Minuman (15)
+            {
+                id: 'drink1', type: 'drink', name: 'Teh Tarik', origin: 'Malaysia', cookTime: 10, difficulty: 'Mudah',
+                image: 'item2/Teh_Tarik.png ',
+                description: 'Minuman teh susu panas yang "ditarik" (dituang) untuk menciptakan buih.',
+                ingredients: ['2 kantong teh hitam pekat', '1 cangkir air panas', '3 sdm susu kental manis', '2 sdm susu evaporasi (opsional)'],
+                instructions: ['Seduh teh hingga pekat.', 'Saring ampas.', 'Campur air teh, susu kental manis, dan susu evaporasi.', 'Siapkan dua cangkir. Tuang (tarik) berulang kali hingga berbuih.', 'Sajikan panas.'],
+                nutrition: { calories: '150kcal', protein: '2g', carbs: '25g', fat: '4g' }
+            },
+            {
+                id: 'drink2', type: 'drink', name: 'Matcha Latte', origin: 'Jepang', cookTime: 5, difficulty: 'Mudah',
+                image: 'item2/Matcha_Latte.png',
+                description: 'Minuman teh hijau bubuk (matcha) dicampur susu panas atau dingin.',
+                ingredients: ['1-2 sdt bubuk matcha', '2 sdm air panas', '1 cangkir susu (sapi/almond)', 'Pemanis (gula/madu) (opsional)'],
+                instructions: ['Ayak matcha ke mangkuk.', 'Tuang air panas. Kocok hingga berbuih.', 'Panaskan susu.', 'Tuang campuran matcha ke cangkir, lalu tuang susu panas.', 'Tambahkan pemanis jika suka.'],
+                nutrition: { calories: '120kcal', protein: '8g', carbs: '12g', fat: '5g' }
+            },
+            {
+                id: 'drink3', type: 'drink', name: 'Caipirinha', origin: 'Brasil', cookTime: 5, difficulty: 'Mudah',
+                image: 'item2/Caipirinha.png',
+                description: 'Koktail nasional Brasil, dibuat dengan cachaça (spirit tebu), gula, dan jeruk nipis.',
+                ingredients: ['1 buah jeruk nipis', '2 sdt gula pasir', '60ml cachaça', 'Es batu pecah'],
+                instructions: ['Potong jeruk nipis 8 bagian.', 'Masukkan ke gelas, tambahkan gula.', 'Tumbuk (muddle) jeruk nipis dan gula.', 'Tambahkan cachaça.', 'Isi gelas dengan es batu pecah. Aduk.'],
+                nutrition: { calories: '180kcal', protein: '0g', carbs: '15g', fat: '0g' }
+            },
+            {
+                id: 'drink4', type: 'drink', name: 'Mango Lassi', origin: 'India', cookTime: 5, difficulty: 'Mudah',
+                image: 'item2/Mango_Lassi.png',
+                description: 'Minuman smoothie yogurt khas India dibuat dengan mangga matang.',
+                ingredients: ['1 cangkir yogurt tawar', '1/2 cangkir susu', '1 cangkir potongan mangga', '2-4 sdm gula', 'Sejumput kapulaga (opsional)'],
+                instructions: ['Masukkan semua bahan ke blender.', 'Blender hingga halus.', 'Tuang ke gelas.', 'Sajikan dingin.'],
+                nutrition: { calories: '250kcal', protein: '10g', carbs: '45g', fat: '5g' }
+            },
+            {
+                id: 'drink5', type: 'drink', name: 'Espresso', origin: 'Italia', cookTime: 2, difficulty: 'Mudah',
+                image: 'item2/Espresso.png',
+                description: 'Kopi konsentrat dibuat dengan mengekstraksi biji kopi halus bertekanan tinggi.',
+                ingredients: ['7-9 gram biji kopi (fine grind)', '30ml air panas (90-95°C)'],
+                instructions: ['Siapkan mesin espresso.', 'Giling kopi.', 'Padatkan (tamping) ke portafilter.', 'Pasang portafilter.', 'Ekstraksi 25-30 detik (30ml).', 'Sajikan segera.'],
+                nutrition: { calories: '5kcal', protein: '0g', carbs: '1g', fat: '0g' }
+            },
+            {
+                id: 'drink6', type: 'drink', name: 'Mojito', origin: 'Kuba', cookTime: 5, difficulty: 'Mudah',
+                image: 'item2/Mojito.png',
+                description: 'Koktail klasik Kuba dengan rum, daun mint, jeruk nipis, gula, dan air soda.',
+                ingredients: ['60ml rum putih', '1/2 jeruk nipis (peras)', '1 sdt gula pasir', 'Segenggam daun mint', 'Air soda', 'Es batu pecah'],
+                instructions: ['Tumbuk (muddle) daun mint dan gula di gelas.', 'Tambahkan perasan jeruk nipis dan rum.', 'Isi gelas dengan es batu pecah.', 'Tambahkan air soda hingga penuh.', 'Aduk perlahan.', 'Hiasi dengan daun mint.'],
+                nutrition: { calories: '170kcal', protein: '0g', carbs: '15g', fat: '0g' }
+            },
+            {
+                id: 'drink7', type: 'drink', name: 'Sangria', origin: 'Spanyol', cookTime: 15, difficulty: 'Mudah',
+                image: 'item2/Sangria.png',
+                description: 'Minuman anggur (wine) khas Spanyol yang dicampur dengan potongan buah segar.',
+                ingredients: ['1 botol anggur merah (red wine)', '100ml brandy', '2 sdm gula', '1 jeruk (iris)', '1 apel (potong dadu)', '1 lemon (iris)', '500ml air soda (saat penyajian)'],
+                instructions: ['Campur wine, brandy, dan gula dalam pitcher besar. Aduk hingga gula larut.', 'Masukkan semua potongan buah.', 'Dinginkan di kulkas minimal 2 jam (lebih baik semalaman).', 'Saat akan disajikan, tuang air soda. Aduk.', 'Sajikan dengan es batu.'],
+                nutrition: { calories: '200kcal', protein: '1g', carbs: '20g', fat: '0g' }
+            },
+            {
+                id: 'drink8', type: 'drink', name: 'Irish Coffee', origin: 'Irlandia', cookTime: 10, difficulty: 'Sedang',
+                image: 'item2/Irish_Coffee.png',
+                description: 'Kopi panas yang dicampur dengan wiski Irlandia, gula, dan krim kocok di atasnya.',
+                ingredients: ['1 cangkir kopi hitam panas', '45ml wiski Irlandia', '2 sdt gula aren', 'Krim kental (kocok sedikit)'],
+                instructions: ['Panaskan gelas dengan air panas, buang airnya.', 'Masukkan gula aren ke gelas.', 'Tuang kopi panas, aduk hingga gula larut.', 'Tambahkan wiski Irlandia.', 'Tuang perlahan krim kocok di atasnya melalui punggung sendok agar mengapung.'],
+                nutrition: { calories: '210kcal', protein: '1g', carbs: '10g', fat: '8g' }
+            },
+            {
+                id: 'drink9', type: 'drink', name: 'Bubble Tea (Boba)', origin: 'Taiwan', cookTime: 40, difficulty: 'Sedang',
+                image: 'item2/Bubble_Tea.png',
+                description: 'Minuman teh susu (atau lainnya) dengan bola tapioka kenyal (boba).',
+                ingredients: ['1/2 cangkir boba tapioka kering', '2 kantong teh hitam', '1 cangkir susu', 'Sirup gula (gula + air panas)', 'Es batu'],
+                instructions: ['Rebus boba tapioka sesuai instruksi (biasanya 20-30 mnt), tiriskan.', 'Rendam boba dalam sirup gula.', 'Seduh teh hitam, dinginkan.', 'Di gelas, masukkan boba.', 'Tambahkan es batu.', 'Tuang teh dan susu.', 'Aduk rata.'],
+                nutrition: { calories: '350kcal', protein: '3g', carbs: '70g', fat: '5g' }
+            },
+            {
+                id: 'drink10', type: 'drink', name: 'Horchata', origin: 'Meksiko', cookTime: 20, difficulty: 'Mudah',
+                image: 'item2/Horchata.png',
+                description: 'Minuman beras manis khas Meksiko, dibumbui dengan kayu manis.',
+                ingredients: ['1 cangkir beras putih (rendam 4 jam/semalaman)', '2 cangkir air', '1 batang kayu manis', '1/2 cangkir susu', '1 sdt ekstrak vanila', 'Gula secukupnya'],
+                instructions: ['Blender beras (yang sudah direndam), air, dan batang kayu manis hingga halus.', 'Saring menggunakan kain tipis.', 'Tambahkan susu, vanila, dan gula.', 'Aduk rata.', 'Sajikan dingin dengan es batu dan taburan kayu manis bubuk.'],
+                nutrition: { calories: '180kcal', protein: '2g', carbs: '35g', fat: '2g' }
+            },
+            {
+                id: 'drink11', type: 'drink', name: 'Masala Chai', origin: 'India', cookTime: 15, difficulty: 'Mudah',
+                image: 'item2/Masala_Chai.png',
+                description: 'Teh susu rempah khas India, menggunakan jahe, kapulaga, cengkeh, dan lada hitam.',
+                ingredients: ['1 cangkir air', '1 cangkir susu', '2 sdt teh hitam bubuk', '1 ruas jahe (geprek)', '3 butir kapulaga', '2 butir cengkeh', 'Gula secukupnya'],
+                instructions: ['Didihkan air dengan semua rempah (jahe, kapulaga, cengkeh) selama 5 menit.', 'Masukkan teh bubuk, didihkan 1 menit.', 'Masukkan susu dan gula.', 'Panaskan hingga hampir mendidih (jangan sampai meluap).', 'Saring ke cangkir.', 'Sajikan panas.'],
+                nutrition: { calories: '140kcal', protein: '4g', carbs: '20g', fat: '5g' }
+            },
+            {
+                id: 'drink12', type: 'drink', name: 'Pisco Sour', origin: 'Peru', cookTime: 5, difficulty: 'Sedang',
+                image: 'item2/Pisco_Sour.png',
+                description: 'Koktail asam khas Peru, menggunakan Pisco (spirit anggur), air jeruk nipis, dan putih telur.',
+                ingredients: ['60ml Pisco', '30ml air jeruk nipis (key lime)', '20ml sirup gula', '1 putih telur', 'Es batu', 'Angostura bitters (untuk hiasan)'],
+                instructions: ['Masukkan Pisco, air jeruk, sirup gula, dan putih telur ke shaker (tanpa es).', 'Kocok (dry shake) 15 detik agar berbusa.', 'Tambahkan es batu ke shaker.', 'Kocok lagi hingga sangat dingin (wet shake).', 'Saring ke gelas.', 'Teteskan 3 tetes Angostura bitters di atas busa.'],
+                nutrition: { calories: '200kcal', protein: '3g', carbs: '15g', fat: '0g' }
+            },
+            {
+                id: 'drink13', type: 'drink', name: 'Vietnamese Iced Coffee', origin: 'Vietnam', cookTime: 10, difficulty: 'Mudah',
+                image: 'item2/Vietnamese_Iced_Coffee.png',
+                description: 'Kopi tetes kental (dark roast) khas Vietnam disajikan dengan susu kental manis dan es.',
+                ingredients: ['2 sdm kopi bubuk Vietnam (dark roast, giling sedang)', '2-3 sdm susu kental manis', 'Air mendidih', 'Es batu'],
+                instructions: ['Tuang susu kental manis di dasar gelas.', 'Letakkan phin (filter) Vietnam di atas gelas.', 'Masukkan kopi bubuk ke phin, tekan sedikit.', 'Tuang sedikit air panas, tunggu 30 detik (blooming).', 'Tuang air panas hingga penuh, tutup.', 'Tunggu kopi menetes habis (5-8 menit).', 'Angkat phin. Aduk kopi dan susu.', 'Tuang ke gelas lain berisi es batu.'],
+                nutrition: { calories: '130kcal', protein: '2g', carbs: '20g', fat: '4g' }
+            },
+            {
+                id: 'drink14', type: 'drink', name: 'Aperol Spritz', origin: 'Italia', cookTime: 3, difficulty: 'Mudah',
+                image: 'item2/Aperol_Spritz.png',
+                description: 'Aperitif (minuman pembuka) ringan khas Italia, berwarna oranye cerah.',
+                ingredients: ['3 bagian Prosecco (sparkling wine)', '2 bagian Aperol', '1 bagian air soda', 'Es batu', 'Irisan jeruk'],
+                instructions: ['Isi gelas wine dengan es batu.', 'Tuang Prosecco.', 'Tambahkan Aperol.', 'Tambahkan sedikit air soda.', 'Aduk perlahan.', 'Hiasi dengan irisan jeruk.'],
+                nutrition: { calories: '160kcal', protein: '0g', carbs: '15g', fat: '0g' }
+            },
+            {
+                id: 'drink15', type: 'drink', name: 'Cider (Apel)', origin: 'Inggris', cookTime: 120, difficulty: 'Sedang',
+                image: 'item2/Cider.png',
+                description: 'Minuman fermentasi sari apel, bisa beralkohol (hard cider) atau non-alkohol (sparkling cider).',
+                ingredients: ['2 liter jus apel murni (tanpa pengawet)', '1 batang kayu manis', '4 butir cengkeh', '1/4 sdt pala bubuk', 'Gula aren (opsional)'],
+                instructions: ['(Versi non-alkohol, hangat) Masukkan semua bahan ke panci.', 'Panaskan dengan api kecil (jangan sampai mendidih).', 'Masak perlahan selama 1-2 jam agar rempah meresap.', 'Saring rempah-rempah.', 'Sajikan hangat.'],
+                nutrition: { calories: '150kcal', protein: '0g', carbs: '35g', fat: '0g' }
+            },
+        ];
+
+        // --- STATE APLIKASI ---
+        const state = {
+            currentPage: 'selection', // selection, list, detail, favorites
+            currentListType: 'food', // food, drink
+            currentRecipeId: null,
+            favorites: [], // 1. Favorit Lokal
+            shoppingList: [], // 4. Daftar Belanja
+            ratings: {}, // 6. Penilaian
+            darkMode: false,
+            portionMultiplier: 1, // 2. Kalkulator Porsi
+            currentStep: 0, // 5. Mode Step-by-Step
+            currentTimer: null, // 3. Timer
+            timerSeconds: 0,
+            currentTheme: '37 99 235', // 15. Tema Warna
+            currentFontSize: 16, // 16. Zoom Teks
+            isCompactView: false, // 19. Tampilan Kompak
+        };
+
+        // --- ELEMEN DOM ---
+        const dom = {
+            splashScreen: document.getElementById('splash-screen'),
+            appContainer: document.getElementById('app-container'),
+            pages: document.querySelectorAll('.page'),
+            pageSelection: document.getElementById('page-selection'),
+            pageList: document.getElementById('page-list'),
+            pageDetail: document.getElementById('page-detail'),
+            pageFavorites: document.getElementById('page-favorites'),
+            selectFood: document.getElementById('select-food'),
+            selectDrink: document.getElementById('select-drink'),
+            backButtons: document.querySelectorAll('.back-btn'),
+            homeBtn: document.getElementById('home-btn'),
+            
+            listTitle: document.getElementById('list-title'),
+            recipeGrid: document.getElementById('recipe-grid'),
+            noRecipesFound: document.getElementById('no-recipes-found'),
+            detailContent: document.getElementById('detail-content'),
+            favoritesGrid: document.getElementById('favorites-grid'),
+            noFavorites: document.getElementById('no-favorites'),
+            
+            searchInput: document.getElementById('search-input'),
+            filterOrigin: document.getElementById('filter-origin'),
+            filterTime: document.getElementById('filter-time'),
+            filterDifficulty: document.getElementById('filter-difficulty'),
+            randomRecipeBtn: document.getElementById('random-recipe-btn'),
+            compactToggleBtn: document.getElementById('compact-toggle-btn'),
+            
+            darkModeToggle: document.getElementById('dark-mode-toggle'),
+            fullscreenToggle: document.getElementById('fullscreen-toggle'),
+            favoritesBtn: document.getElementById('favorites-btn'),
+            printBtn: document.getElementById('print-btn'),
+            shareBtn: document.getElementById('share-btn'),
+            
+            loadingOverlay: document.getElementById('loading-overlay'),
+            toast: document.getElementById('toast-notification'),
+            
+            // Fitur Baru
+            recipeOfTheDayCard: document.getElementById('recipe-of-the-day-card'),
+            clearFavoritesBtn: document.getElementById('clear-favorites-btn'),
+            scrollToTop: document.getElementById('scroll-to-top'),
+            
+            timerBtn: document.getElementById('timer-btn'),
+            timerModal: document.getElementById('timer-modal'),
+            closeTimerModal: document.getElementById('close-timer-modal'),
+            timerDisplay: document.getElementById('timer-display'),
+            timerStartStop: document.getElementById('timer-start-stop'),
+            timerReset: document.getElementById('timer-reset'),
+            
+            shoppingListBtn: document.getElementById('shopping-list-btn'),
+            shoppingListModal: document.getElementById('shopping-list-modal'),
+            closeShoppingListModal: document.getElementById('close-shopping-list-modal'),
+            shoppingListContent: document.getElementById('shopping-list-content'),
+            clearShoppingList: document.getElementById('clear-shopping-list'),
+            
+            stepModal: document.getElementById('step-by-step-modal'),
+            closeStepModal: document.getElementById('close-step-modal'),
+            stepCounter: document.getElementById('step-counter'),
+            stepText: document.getElementById('step-text'),
+            prevStepBtn: document.getElementById('prev-step-btn'),
+            nextStepBtn: document.getElementById('next-step-btn'),
+            
+            themeBtn: document.getElementById('theme-btn'),
+            themeModal: document.getElementById('theme-modal'),
+            closeThemeModal: document.getElementById('close-theme-modal'),
+            themeOptions: document.getElementById('theme-options'),
+            
+            confirmModal: document.getElementById('confirm-modal'),
+            confirmTitle: document.getElementById('confirm-title'),
+            confirmMessage: document.getElementById('confirm-message'),
+            confirmOk: document.getElementById('confirm-ok'),
+            confirmCancel: document.getElementById('confirm-cancel'),
+        };
+
+        // --- FUNGSI NAVIGASI & TAMPILAN ---
+
+        function showPage(pageId) {
+            dom.pages.forEach(page => page.classList.add('hidden'));
+            const newPage = document.getElementById(pageId);
+            newPage.classList.remove('hidden');
+            // 17. Animasi Halaman
+            newPage.classList.add('page'); 
+            state.currentPage = pageId.replace('page-', '');
+            window.scrollTo(0, 0);
+        }
+        
+        function showLoading(show) {
+            dom.loadingOverlay.style.display = show ? 'flex' : 'none';
+        }
+
+        let toastTimer;
+        function showToast(message, type = 'success') {
+            clearTimeout(toastTimer);
+            dom.toast.innerHTML = message;
+            
+            dom.toast.classList.remove('bg-green-500', 'bg-red-500', 'bg-gray-900', 'dark:bg-gray-100');
+            if (type === 'success') {
+                dom.toast.classList.add('bg-green-500', 'text-white');
+            } else if (type === 'error') {
+                dom.toast.classList.add('bg-red-500', 'text-white');
+            } else {
+                dom.toast.classList.add('bg-gray-900', 'dark:bg-gray-100');
+            }
+            
+            dom.toast.classList.remove('translate-x-[200%]');
+            dom.toast.classList.add('translate-x-0');
+
+            toastTimer = setTimeout(() => {
+                dom.toast.classList.remove('translate-x-0');
+                dom.toast.classList.add('translate-x-[200%]');
+            }, 3000);
+        }
+        
+        // 18. Modal Konfirmasi Kustom
+        function showConfirmModal(title, message, onOk) {
+            dom.confirmTitle.textContent = title;
+            dom.confirmMessage.textContent = message;
+            dom.confirmModal.style.display = 'flex';
+            
+            dom.confirmOk.onclick = () => {
+                onOk();
+                dom.confirmModal.style.display = 'none';
+            };
+            dom.confirmCancel.onclick = () => {
+                dom.confirmModal.style.display = 'none';
+            };
+        }
+
+        // --- FUNGSI RENDER ---
+
+        function renderRecipeList(type) {
+            state.currentListType = type;
+            const title = type === 'food' ? 'Resep Makanan' : 'Resep Minuman';
+            dom.listTitle.textContent = title;
+
+            // Dapatkan filter
+            const searchTerm = dom.searchInput.value.toLowerCase();
+            const originFilter = dom.filterOrigin.value;
+            const timeFilter = dom.filterTime.value;
+            const difficultyFilter = dom.filterDifficulty.value;
+
+            // Filter resep
+            const filteredRecipes = allRecipes.filter(recipe => {
+                const typeMatch = recipe.type === type;
+                const searchMatch = recipe.name.toLowerCase().includes(searchTerm) || recipe.description.toLowerCase().includes(searchTerm) || recipe.origin.toLowerCase().includes(searchTerm);
+                const originMatch = originFilter === 'all' || recipe.origin === originFilter;
+                const difficultyMatch = difficultyFilter === 'all' || recipe.difficulty === difficultyFilter;
+                
+                const timeMatch = (timeFilter === 'all') ||
+                    (timeFilter === '30' && recipe.cookTime <= 30) ||
+                    (timeFilter === '60' && recipe.cookTime <= 60) ||
+                    (timeFilter === '120' && recipe.cookTime > 60); // Logika 'lebih dari 1 jam'
+
+                return typeMatch && searchMatch && originMatch && difficultyMatch && timeMatch;
+            });
+
+            // Populate grid
+            dom.recipeGrid.innerHTML = '';
+            if (filteredRecipes.length === 0) {
+                dom.noRecipesFound.classList.remove('hidden');
+            } else {
+                dom.noRecipesFound.classList.add('hidden');
+                filteredRecipes.forEach(recipe => {
+                    dom.recipeGrid.innerHTML += createRecipeCard(recipe);
+                });
+            }
+            
+            // Atur listener untuk kartu (di-delegasi-kan)
+            updateFavoriteButtons();
+        }
+
+        function renderRecipeDetail(recipeId) {
+            const recipe = allRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            state.currentRecipeId = recipeId;
+            state.portionMultiplier = 1; // Reset porsi
+            
+            renderDetailContent(recipe); // Panggil fungsi render terpisah
+            
+            // Perbarui tombol favorit di halaman detail
+            updateDetailFavoriteButton();
+            
+            // Atur listener
+            dom.printBtn.onclick = () => printRecipe();
+            dom.shareBtn.onclick = () => shareRecipe(recipe);
+            dom.timerBtn.onclick = () => {
+                dom.timerModal.style.display = 'flex';
+                resetTimer();
+                // Set timer default ke cookTime resep
+                state.timerSeconds = recipe.cookTime * 60;
+                dom.timerDisplay.textContent = formatTime(state.timerSeconds);
+            };
+
+            const detailFavBtn = document.getElementById('detail-favorite-btn');
+            detailFavBtn.onclick = () => toggleFavorite(recipe);
+
+            showPage('page-detail');
+        }
+        
+        // Fungsi terpisah untuk me-render konten detail (untuk kalkulator porsi)
+        function renderDetailContent(recipe) {
+            // 2. Kalkulator Porsi
+            const multiplier = state.portionMultiplier;
+            const ingredientsHtml = recipe.ingredients.map(ing => {
+                // Coba cari angka di awal string
+                const match = ing.match(/^([0-9.,]+)/);
+                let newAmount = '';
+                let text = ing;
+                
+                if (match) {
+                    try {
+                        let amount = parseFloat(match[1].replace(',', '.'));
+                        newAmount = (amount * multiplier).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+                        text = ing.substring(match[1].length);
+                    } catch(e) {
+                        text = ing; // fallback
+                    }
+                }
+                
+                return `<li class="flex items-start">
+                    <span class="mr-2 text-primary">&bull;</span>
+                    <span>${newAmount} ${text}</span>
+                </li>`;
+            }).join('');
+
+            const instructionsHtml = recipe.instructions.map((step, index) => `
+                <li class="flex items-start">
+                    <span class="mr-3 flex-shrink-0 h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">${index + 1}</span>
+                    <span>${step}</span>
+                </li>
+            `).join('');
+            
+            // 10. Info Gizi
+            const nutritionHtml = Object.entries(recipe.nutrition).map(([key, value]) => `
+                <div class="text-center p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <p class="text-sm capitalize text-gray-600 dark:text-gray-400">${key}</p>
+                    <p class="font-bold">${value}</p>
+                </div>
+            `).join('');
+            
+            // 6. Penilaian
+            const currentRating = state.ratings[recipe.id] || 0;
+            let ratingStars = '';
+            for(let i = 1; i <= 5; i++) {
+                ratingStars += `<i class="fa-star ${i <= currentRating ? 'fas selected' : 'far'}" data-value="${i}"></i>`;
+            }
+
+            dom.detailContent.innerHTML = `
+                <img src="${recipe.image}" alt="${recipe.name}" class="w-full h-48 md:h-64 object-cover">
+                <div class="p-4 md:p-6" style="font-size: ${state.currentFontSize}px;"> <!-- 16. Zoom Teks -->
+                    <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full uppercase mb-2">${recipe.origin}</span>
+                    <h2 class="text-3xl font-bold mb-2">${recipe.name}</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">${recipe.description}</p>
+                    
+                    <div class="flex flex-wrap gap-4 mb-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span><i class="fas fa-clock mr-1"></i> ${recipe.cookTime} mnt</span>
+                        <span><i class="fas fa-concierge-bell mr-1"></i> ${recipe.difficulty}</span>
+                    </div>
+
+                    <!-- 6. Penilaian -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Beri Penilaian:</h4>
+                        <div class="rating-stars text-2xl" data-id="${recipe.id}">
+                            ${ratingStars}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-1">
+                            <h3 class="text-xl font-semibold mb-3 border-b-2 border-primary pb-1">Bahan-bahan</h3>
+                            <!-- 2. Kalkulator Porsi -->
+                            <div class="flex items-center gap-3 mb-3">
+                                <label class="text-sm">Porsi:</label>
+                                <button class="portion-btn portion-decrease w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full disabled:opacity-50">-</button>
+                                <span id="portion-display" class="font-bold">${multiplier}</span>
+                                <button class="portion-btn portion-increase w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full">+</button>
+                            </div>
+                            <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                                ${ingredientsHtml}
+                            </ul>
+                            <!-- 11. Salin Bahan -->
+                            <button id="copy-ingredients" class="mt-4 text-sm text-primary hover:underline">
+                                <i class="fas fa-copy mr-1"></i> Salin Bahan
+                            </button>
+                        </div>
+                        <div class="md:col-span-2">
+                            <h3 class="text-xl font-semibold mb-3 border-b-2 border-primary pb-1">Instruksi</h3>
+                            <div class="flex items-center gap-4 mb-4">
+                                <!-- 5. Mode Step-by-Step -->
+                                <button id="step-by-step-btn" class="text-sm bg-primary hover:bg-opacity-80 text-white py-1 px-3 rounded-lg">
+                                    <i class="fas fa-shoe-prints mr-1"></i> Mode Step-by-Step
+                                </button>
+                                <!-- 15. Audio TTS -->
+                                <button id="tts-instructions-btn" class="text-sm bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded-lg">
+                                    <i class="fas fa-volume-up mr-1"></i> Baca Instruksi
+                                </button>
+                            </div>
+                            <ol class="space-y-4 text-gray-700 dark:text-gray-300">
+                                ${instructionsHtml}
+                            </ol>
+                            <!-- 11. Salin Instruksi -->
+                            <button id="copy-instructions" class="mt-4 text-sm text-primary hover:underline">
+                                <i class="fas fa-copy mr-1"></i> Salin Instruksi
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 10. Info Gizi -->
+                    <div class="mt-8">
+                        <h3 class="text-xl font-semibold mb-3 border-b-2 border-primary pb-1">Info Gizi (Per Porsi)</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            ${nutritionHtml}
+                        </div>
+                    </div>
+                    
+                    <!-- 16. Zoom Teks -->
+                    <div class="mt-8 flex items-center justify-end gap-2 no-print">
+                        <span class="text-sm">Ukuran Teks:</span>
+                        <button id="zoom-out-btn" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-lg">-</button>
+                        <button id="zoom-in-btn" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-lg">+</button>
+                    </div>
+                </div>
+            `;
+            
+            // Re-attach listeners untuk elemen yang baru di-render
+            attachDetailListeners(recipe);
+        }
+
+        function renderFavoritesPage() {
+            dom.favoritesGrid.innerHTML = '';
+            if (state.favorites.length === 0) {
+                dom.noFavorites.classList.remove('hidden');
+            } else {
+                dom.noFavorites.classList.add('hidden');
+                state.favorites.forEach(recipeId => {
+                    const recipe = allRecipes.find(r => r.id === recipeId);
+                    if(recipe) dom.favoritesGrid.innerHTML += createRecipeCard(recipe);
+                });
+            }
+            updateFavoriteButtons();
+        }
+        
+        function createRecipeCard(recipe) {
+            const isFavorite = state.favorites.includes(recipe.id);
+            const favIconClass = isFavorite ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-500';
+            
+            // 6. Penilaian
+            const rating = state.ratings[recipe.id] || 0;
+            let ratingHtml = '';
+            if (rating > 0) {
+                ratingHtml = `<span class="text-yellow-500 text-sm font-bold"><i class="fas fa-star"></i> ${rating.toFixed(1)}</span>`;
+            } else {
+                ratingHtml = `<span class="text-gray-400 text-sm">Belum ada rating</span>`;
+            }
+            
+            return `
+                <div class="recipe-card bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col" data-id="${recipe.id}">
+                    <img src="${recipe.image}" alt="${recipe.name}" class="w-full h-40 object-cover cursor-pointer recipe-card-image">
+                    <div class="p-4 flex flex-col flex-grow">
+                        <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full uppercase mb-2 w-fit">${recipe.origin}</span>
+                        <h4 class="text-lg font-bold mb-1 cursor-pointer hover:text-primary recipe-card-title">${recipe.name}</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-grow recipe-desc">${recipe.description.substring(0, 70)}...</p>
+                        
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 flex justify-between recipe-meta">
+                            <span><i class="fas fa-clock mr-1"></i> ${recipe.cookTime} mnt</span>
+                            <span><i class="fas fa-concierge-bell mr-1"></i> ${recipe.difficulty}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-auto">
+                            ${ratingHtml}
+                            <button class="favorite-toggle-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${recipe.id}">
+                                <i class="${favIconClass}"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 20. Resep Hari Ini
+        function renderRecipeOfTheDay() {
+            const today = new Date().toDateString(); // Kunci berdasarkan hari
+            let recipeId = localStorage.getItem('recipeOfTheDayId');
+            let storedDate = localStorage.getItem('recipeOfTheDayDate');
+            
+            if (!recipeId || storedDate !== today) {
+                // Pilih resep acak baru
+                const randomIndex = Math.floor(Math.random() * allRecipes.length);
+                recipeId = allRecipes[randomIndex].id;
+                localStorage.setItem('recipeOfTheDayId', recipeId);
+                localStorage.setItem('recipeOfTheDayDate', today);
+            }
+            
+            const recipe = allRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            
+            dom.recipeOfTheDayCard.innerHTML = `
+                <img src="${recipe.image}" alt="${recipe.name}" class="w-full md:w-1/3 h-48 md:h-full object-cover">
+                <div class="p-6">
+                    <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full uppercase mb-2">Resep Hari Ini</span>
+                    <h4 class="text-2xl font-bold mb-2">${recipe.name}</h4>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">${recipe.description}</p>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        <span><i class="fas fa-clock mr-1"></i> ${recipe.cookTime} mnt</span>
+                        <span class="ml-4"><i class="fas fa-concierge-bell mr-1"></i> ${recipe.difficulty}</span>
+                    </div>
+                </div>
+            `;
+            dom.recipeOfTheDayCard.onclick = () => renderRecipeDetail(recipe.id);
+        }
+        
+        // 4. Daftar Belanja
+        function renderShoppingList() {
+            dom.shoppingListContent.innerHTML = '';
+            if (state.shoppingList.length === 0) {
+                dom.shoppingListContent.innerHTML = '<p class="text-gray-500 text-center">Daftar belanja Anda kosong.</p>';
+            } else {
+                state.shoppingList.forEach((item, index) => {
+                    dom.shoppingListContent.innerHTML += `
+                        <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span>${item}</span>
+                            <button class="remove-shopping-item text-red-500 hover:text-red-700" data-index="${index}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+
+        // --- FUNGSI FITUR ---
+        
+        // 1. Favorit Lokal
+        function initLocalStorage() {
+            state.favorites = JSON.parse(localStorage.getItem('recipeFavorites')) || [];
+            state.shoppingList = JSON.parse(localStorage.getItem('recipeShoppingList')) || [];
+            state.ratings = JSON.parse(localStorage.getItem('recipeRatings')) || {};
+            
+            const theme = localStorage.getItem('recipeTheme');
+            if(theme) setTheme(theme);
+            
+            const fontSize = localStorage.getItem('recipeFontSize');
+            if(fontSize) state.currentFontSize = parseInt(fontSize, 10);
+            
+            const compact = localStorage.getItem('recipeCompactView');
+            if(compact === 'true') toggleCompactView();
+        }
+        
+        function saveFavorites() {
+            localStorage.setItem('recipeFavorites', JSON.stringify(state.favorites));
+        }
+        
+        function toggleFavorite(recipe) {
+            const recipeId = recipe.id;
+            const index = state.favorites.indexOf(recipeId);
+            
+            if (index > -1) {
+                state.favorites.splice(index, 1); // Hapus
+                showToast("Dihapus dari favorit.", "success");
+            } else {
+                state.favorites.push(recipeId); // Tambah
+                showToast("Ditambahkan ke favorit!", "success");
+            }
+            saveFavorites();
+            
+            // Update UI
+            if (state.currentPage === 'favorites') renderFavoritesPage();
+            if (state.currentPage === 'list') updateFavoriteButtons();
+            if (state.currentPage === 'detail') updateDetailFavoriteButton();
+        }
+        
+        function clearFavorites() {
+            showConfirmModal(
+                "Kosongkan Favorit?",
+                "Anda yakin ingin menghapus semua resep dari favorit Anda?",
+                () => {
+                    state.favorites = [];
+                    saveFavorites();
+                    renderFavoritesPage();
+                    showToast("Semua favorit telah dihapus.", "success");
+                }
+            );
+        }
+
+        // Mode Gelap
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            if (state.darkMode) {
+                document.documentElement.classList.add('dark');
+                dom.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                document.documentElement.classList.remove('dark');
+                dom.darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
+
+        // Fullscreen
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                dom.fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    dom.fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            }
+        }
+
+        // Print
+        function printRecipe() {
+            window.print();
+        }
+
+        // Share
+        async function shareRecipe(recipe) {
+            const shareData = {
+                title: recipe.name,
+                text: `Coba resep ${recipe.name} ini! ${recipe.description}`,
+                url: window.location.href,
+            };
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    await navigator.clipboard.writeText(shareData.url);
+                    showToast("Link resep disalin ke clipboard!", "success");
+                }
+            } catch (err) {
+                showToast("Gagal membagikan resep.", "error");
+            }
+        }
+        
+        // Populate Filter (dinamis)
+        function populateFilters(type) {
+            const origins = [...new Set(allRecipes.filter(r => r.type === type).map(r => r.origin))];
+            dom.filterOrigin.innerHTML = '<option value="all">Semua Asal Negara</option>';
+            origins.sort().forEach(origin => {
+                dom.filterOrigin.innerHTML += `<option value="${origin}">${origin}</option>`;
+            });
+        }
+        
+        // Update Status Tombol Favorit
+        function updateFavoriteButtons() {
+            document.querySelectorAll('.favorite-toggle-btn').forEach(btn => {
+                const recipeId = btn.dataset.id;
+                const isFavorite = state.favorites.includes(recipeId);
+                btn.innerHTML = `<i class="${isFavorite ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-500'}"></i>`;
+            });
+        }
+        
+        function updateDetailFavoriteButton() {
+            if (state.currentPage !== 'detail') return;
+            const isFavorite = state.favorites.includes(state.currentRecipeId);
+            const btn = document.getElementById('detail-favorite-btn');
+            if (isFavorite) {
+                btn.innerHTML = `<i class="fas fa-heart-broken mr-2"></i> <span>Hapus dari Favorit</span>`;
+                btn.classList.replace('bg-red-500', 'bg-gray-500');
+                btn.classList.replace('hover:bg-red-600', 'hover:bg-gray-600');
+            } else {
+                btn.innerHTML = `<i class="fas fa-heart mr-2"></i> <span>Tambah ke Favorit</span>`;
+                btn.classList.replace('bg-gray-500', 'bg-red-500');
+                btn.classList.replace('hover:bg-gray-600', 'hover:bg-red-600');
+            }
+        }
+        
+        // --- FITUR BARU ---
+        
+        // 4. Daftar Belanja
+        function saveShoppingList() {
+            localStorage.setItem('recipeShoppingList', JSON.stringify(state.shoppingList));
+        }
+        function addToShoppingList(ingredient) {
+            // Bersihkan dari tag HTML dan nomor
+            const cleanIngredient = ingredient
+                .replace(/^([0-9.,]+)/, '') // Hapus angka di awal
+                .replace(/<[^>]*>/g, '') // Hapus tag html
+                .trim();
+                
+            if (cleanIngredient && !state.shoppingList.includes(cleanIngredient)) {
+                state.shoppingList.push(cleanIngredient);
+                saveShoppingList();
+                showToast(`${cleanIngredient} ditambahkan ke daftar belanja!`, "success");
+            } else if (state.shoppingList.includes(cleanIngredient)) {
+                showToast("Item sudah ada di daftar belanja.", "error");
+            }
+        }
+        function removeFromShoppingList(index) {
+            state.shoppingList.splice(index, 1);
+            saveShoppingList();
+            renderShoppingList();
+        }
+        function clearShoppingList() {
+            showConfirmModal(
+                "Kosongkan Daftar Belanja?",
+                "Anda yakin ingin menghapus semua item dari daftar belanja?",
+                () => {
+                    state.shoppingList = [];
+                    saveShoppingList();
+                    renderShoppingList();
+                    showToast("Daftar belanja dikosongkan.", "success");
+                }
+            );
+        }
+
+        // 6. Penilaian
+        function saveRating(recipeId, rating) {
+            state.ratings[recipeId] = rating;
+            localStorage.setItem('recipeRatings', JSON.stringify(state.ratings));
+            renderRecipeDetail(recipeId); // Render ulang untuk tampilkan bintang
+            showToast(`Anda memberi ${rating} bintang!`, "success");
+        }
+        
+        // 2. Kalkulator Porsi
+        function updatePortion(direction) {
+            if (direction === 'increase') {
+                state.portionMultiplier += 1;
+            } else if (direction === 'decrease' && state.portionMultiplier > 1) {
+                state.portionMultiplier -= 1;
+            }
+            const recipe = allRecipes.find(r => r.id === state.currentRecipeId);
+            renderDetailContent(recipe); // Render ulang hanya konten
+        }
+        
+        // 3. Timer
+        function startStopTimer() {
+            if (state.currentTimer) {
+                // Stop
+                clearInterval(state.currentTimer);
+                state.currentTimer = null;
+                dom.timerStartStop.textContent = 'Mulai';
+            } else {
+                // Mulai
+                if(state.timerSeconds === 0) state.timerSeconds = 30 * 60; // Default 30 mnt
+                dom.timerStartStop.textContent = 'Stop';
+                state.currentTimer = setInterval(() => {
+                    state.timerSeconds--;
+                    if (state.timerSeconds <= 0) {
+                        state.timerSeconds = 0;
+                        clearInterval(state.currentTimer);
+                        state.currentTimer = null;
+                        dom.timerStartStop.textContent = 'Mulai';
+                        showToast("Timer selesai!", "success");
+                        // opsional: mainkan suara
+                    }
+                    dom.timerDisplay.textContent = formatTime(state.timerSeconds);
+                }, 1000);
+            }
+        }
+        function resetTimer() {
+            if(state.currentTimer) clearInterval(state.currentTimer);
+            state.currentTimer = null;
+            state.timerSeconds = 0;
+            dom.timerDisplay.textContent = '00:00';
+            dom.timerStartStop.textContent = 'Mulai';
+        }
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+        
+        // 5. Mode Step-by-Step
+        function showStepByStep(instructions) {
+            state.currentStep = 0;
+            dom.stepModal.style.display = 'flex';
+            updateStepContent(instructions);
+        }
+        function updateStepContent(instructions) {
+            dom.stepCounter.textContent = `Langkah ${state.currentStep + 1} dari ${instructions.length}`;
+            dom.stepText.textContent = instructions[state.currentStep];
+            dom.prevStepBtn.disabled = state.currentStep === 0;
+            dom.nextStepBtn.disabled = state.currentStep === instructions.length - 1;
+        }
+        
+        // 11. Salin ke Clipboard
+        function copyToClipboard(text, type) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`${type} disalin ke clipboard!`, "success");
+            }).catch(() => {
+                showToast(`Gagal menyalin ${type}.`, "error");
+            });
+        }
+        
+        // 15. Audio TTS
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID'; // Set bahasa Indonesia
+                window.speechSynthesis.cancel(); // Stop pembicaraan sebelumnya
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("Browser Anda tidak mendukung Text-to-Speech.", "error");
+            }
+        }
+        
+        // 15. Tema Warna
+        function setTheme(colorRgb) {
+            document.documentElement.style.setProperty('--color-primary', colorRgb);
+            state.currentTheme = colorRgb;
+            localStorage.setItem('recipeTheme', colorRgb);
+        }
+        
+        // 16. Zoom Teks
+        function changeFontSize(direction) {
+            if (direction === 'increase' && state.currentFontSize < 24) {
+                state.currentFontSize += 2;
+            } else if (direction === 'decrease' && state.currentFontSize > 12) {
+                state.currentFontSize -= 2;
+            }
+            localStorage.setItem('recipeFontSize', state.currentFontSize);
+            const recipe = allRecipes.find(r => r.id === state.currentRecipeId);
+            renderDetailContent(recipe); // Render ulang
+        }
+        
+        // 18. Scroll ke Atas
+        function showScrollToTop() {
+            if (window.scrollY > 300) {
+                dom.scrollToTop.classList.add('show');
+            } else {
+                dom.scrollToTop.classList.remove('show');
+            }
+        }
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // 19. Tampilan Kompak
+        function toggleCompactView() {
+            state.isCompactView = !state.isCompactView;
+            if(state.isCompactView) {
+                dom.recipeGrid.classList.add('compact');
+                dom.compactToggleBtn.innerHTML = '<i class="fas fa-th-large mr-1"></i> Tampilan Penuh';
+                localStorage.setItem('recipeCompactView', 'true');
+            } else {
+                dom.recipeGrid.classList.remove('compact');
+                dom.compactToggleBtn.innerHTML = '<i class="fas fa-bars mr-1"></i> Tampilan Kompak';
+                localStorage.setItem('recipeCompactView', 'false');
+            }
+        }
+        
+        // Fungsi untuk mendaftarkan listener di detail page
+        function attachDetailListeners(recipe) {
+            // 2. Porsi
+            document.querySelector('.portion-decrease').onclick = () => updatePortion('decrease');
+            document.querySelector('.portion-increase').onclick = () => updatePortion('increase');
+            
+            // 6. Rating
+            document.querySelectorAll('.rating-stars .fa-star').forEach(star => {
+                star.onclick = () => saveRating(recipe.id, parseInt(star.dataset.value));
+            });
+            
+            // 5. Step-by-Step
+            document.getElementById('step-by-step-btn').onclick = () => showStepByStep(recipe.instructions);
+            
+            // 11. Salin
+            document.getElementById('copy-ingredients').onclick = () => {
+                const ingredientsText = recipe.ingredients.join('\n');
+                copyToClipboard(ingredientsText, 'Bahan');
+            };
+            document.getElementById('copy-instructions').onclick = () => {
+                const instructionsText = recipe.instructions.map((step, i) => `${i+1}. ${step}`).join('\n');
+                copyToClipboard(instructionsText, 'Instruksi');
+            };
+            
+            // 15. TTS
+            document.getElementById('tts-instructions-btn').onclick = () => {
+                const instructionsText = recipe.instructions.join('. ');
+                speakText(instructionsText);
+            };
+            
+            // 16. Zoom
+            document.getElementById('zoom-in-btn').onclick = () => changeFontSize('increase');
+            document.getElementById('zoom-out-btn').onclick = () => changeFontSize('decrease');
+            
+            // 4. Tambah ke Daftar Belanja
+            dom.detailContent.querySelectorAll('ul li').forEach(li => {
+                li.addEventListener('click', (e) => {
+                    if (e.target.closest('ul').previousElementSibling.textContent === "Bahan-bahan") {
+                        addToShoppingList(li.textContent);
+                    }
+                });
+            });
+        }
+
+        // --- INISIALISASI APLIKASI ---
+        function initApp() {
+            // Sembunyikan Splash Screen
+            setTimeout(() => {
+                dom.splashScreen.classList.add('opacity-0');
+                dom.appContainer.classList.remove('opacity-0');
+                setTimeout(() => dom.splashScreen.classList.add('hidden'), 500);
+            }, 2000);
+
+            initLocalStorage(); // Muat data dari Local Storage
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                toggleDarkMode(); // Aktifkan jika tersimpan
+            }
+            
+            renderRecipeOfTheDay(); // 20. Tampilkan Resep Hari Ini
+
+            // --- Event Listeners ---
+            dom.homeBtn.onclick = () => showPage('page-selection');
+
+            dom.selectFood.addEventListener('click', () => {
+                populateFilters('food');
+                renderRecipeList('food');
+                showPage('page-list');
+            });
+            dom.selectDrink.addEventListener('click', () => {
+                populateFilters('drink');
+                renderRecipeList('drink');
+                showPage('page-list');
+            });
+
+            dom.backButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.currentPage === 'detail') {
+                        showPage('page-list');
+                        renderRecipeList(state.currentListType);
+                    } else if (state.currentPage === 'list' || state.currentPage === 'favorites') {
+                        showPage('page-selection');
+                    }
+                });
+            });
+            
+            dom.favoritesBtn.addEventListener('click', () => {
+                renderFavoritesPage();
+                showPage('page-favorites');
+            });
+            dom.clearFavoritesBtn.onclick = clearFavorites;
+
+            // Fitur Header
+            dom.darkModeToggle.addEventListener('click', toggleDarkMode);
+            dom.fullscreenToggle.addEventListener('click', toggleFullScreen);
+            window.addEventListener('scroll', showScrollToTop); // 18
+            dom.scrollToTop.addEventListener('click', scrollToTop); // 18
+            
+            // Filter dan Search
+            dom.searchInput.addEventListener('input', () => renderRecipeList(state.currentListType));
+            dom.filterOrigin.addEventListener('change', () => renderRecipeList(state.currentListType));
+            dom.filterTime.addEventListener('change', () => renderRecipeList(state.currentListType));
+            dom.filterDifficulty.addEventListener('change', () => renderRecipeList(state.currentListType));
+            
+            // 9. Resep Acak
+            dom.randomRecipeBtn.onclick = () => {
+                const list = allRecipes.filter(r => r.type === state.currentListType);
+                const randomRecipe = list[Math.floor(Math.random() * list.length)];
+                renderRecipeDetail(randomRecipe.id);
+            };
+            
+            // 19. Tampilan Kompak
+            dom.compactToggleBtn.onclick = toggleCompactView;
+            
+            // Delegasi Event untuk klik kartu resep dan tombol favorit di grid
+            document.body.addEventListener('click', (e) => {
+                // Tombol favorit di kartu
+                const favBtn = e.target.closest('.favorite-toggle-btn');
+                if (favBtn) {
+                    const recipeId = favBtn.dataset.id;
+                    const recipe = allRecipes.find(r => r.id === recipeId);
+                    if (recipe) toggleFavorite(recipe);
+                    return; // Hentikan propagasi agar tidak membuka detail
+                }
+                
+                // Klik kartu (gambar atau judul)
+                const card = e.target.closest('.recipe-card');
+                const isImage = e.target.matches('.recipe-card-image');
+                const isTitle = e.target.matches('.recipe-card-title');
+                if (card && (isImage || isTitle)) {
+                    renderRecipeDetail(card.dataset.id);
+                }
+            });
+            
+            // 3. Timer
+            dom.timerStartStop.onclick = startStopTimer;
+            dom.timerReset.onclick = resetTimer;
+            dom.closeTimerModal.onclick = () => dom.timerModal.style.display = 'none';
+            
+            // 4. Daftar Belanja
+            dom.shoppingListBtn.onclick = () => {
+                renderShoppingList();
+                dom.shoppingListModal.style.display = 'flex';
+            };
+            dom.closeShoppingListModal.onclick = () => dom.shoppingListModal.style.display = 'none';
+            dom.clearShoppingList.onclick = clearShoppingList;
+            dom.shoppingListContent.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-shopping-item');
+                if(removeBtn) {
+                    removeFromShoppingList(parseInt(removeBtn.dataset.index));
+                }
+            });
+            
+            // 5. Step-by-Step
+            dom.closeStepModal.onclick = () => dom.stepModal.style.display = 'none';
+            dom.prevStepBtn.onclick = () => {
+                if(state.currentStep > 0) {
+                    state.currentStep--;
+                    const recipe = allRecipes.find(r => r.id === state.currentRecipeId);
+                    updateStepContent(recipe.instructions);
+                }
+            };
+            dom.nextStepBtn.onclick = () => {
+                const recipe = allRecipes.find(r => r.id === state.currentRecipeId);
+                if(state.currentStep < recipe.instructions.length - 1) {
+                    state.currentStep++;
+                    updateStepContent(recipe.instructions);
+                }
+            };
+            
+            // 15. Tema
+            dom.themeBtn.onclick = () => dom.themeModal.style.display = 'flex';
+            dom.closeThemeModal.onclick = () => dom.themeModal.style.display = 'none';
+            dom.themeOptions.addEventListener('click', (e) => {
+                if(e.target.matches('.theme-option')) {
+                    setTheme(e.target.dataset.color);
+                    dom.themeModal.style.display = 'none';
+                }
+            });
+
+            showPage('page-selection');
+        }
+
+        // --- MULAI APLIKASI ---
+        initApp();
+
+    </script>
+
+</body>
+</html>
+
